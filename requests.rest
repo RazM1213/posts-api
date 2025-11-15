@@ -1,11 +1,9 @@
 ### Health Check
 GET http://localhost:3000/health
 
-########################################
-### POST ENDPOINTS
-########################################
+### ============== POSTS API ==============
 
-### 1. Create a new post
+### 1. Add a New Post
 POST http://localhost:3000/post
 Content-Type: application/json
 
@@ -15,126 +13,186 @@ Content-Type: application/json
   "sender": "user123"
 }
 
-### 2. Get all posts
+###
+
+### Add Another Post (same sender)
+POST http://localhost:3000/post
+Content-Type: application/json
+
+{
+  "title": "My Second Post",
+  "content": "More interesting content here",
+  "sender": "user123"
+}
+
+###
+
+### Add Post from Different Sender
+POST http://localhost:3000/post
+Content-Type: application/json
+
+{
+  "title": "Hello World",
+  "content": "First post from another user",
+  "sender": "user456"
+}
+
+###
+
+### 2. Get All Posts
 GET http://localhost:3000/post
 
-### 3. Get a specific post by ID (replace with actual ID from create response)
-GET http://localhost:3000/post/673496d0a8f4e5001234abcd
+###
 
-### 4. Get posts by sender
+### 3. Get a Post by ID
+GET http://localhost:3000/post/1
+
+###
+
+### Get a Post by ID (non-existent)
+GET http://localhost:3000/post/999
+
+###
+
+### 4. Get Posts by Sender
 GET http://localhost:3000/post?sender=user123
 
-### 5. Update a post (replace with actual ID)
-PUT http://localhost:3000/post/673496d0a8f4e5001234abcd
+###
+
+### Get Posts by Another Sender
+GET http://localhost:3000/post?sender=user456
+
+###
+
+### 5. Update a Post (PUT)
+PUT http://localhost:3000/post/1
 Content-Type: application/json
 
 {
   "title": "Updated Post Title",
-  "content": "This is the updated content",
+  "content": "This post has been updated with new content",
   "sender": "user123"
 }
 
-### 6. Delete a post (replace with actual ID)
-DELETE http://localhost:3000/post/673496d0a8f4e5001234abcd
+###
 
-########################################
-### COMMENT ENDPOINTS
-########################################
+### Update Post (non-existent)
+PUT http://localhost:3000/post/999
+Content-Type: application/json
 
-### 1. Create a new comment
+{
+  "title": "Test",
+  "content": "Test content",
+  "sender": "user123"
+}
+
+###
+
+### Delete a Post (optional)
+DELETE http://localhost:3000/post/2
+
+###
+
+### ============== COMMENTS API ==============
+
+### Create a Comment
 POST http://localhost:3000/comment
 Content-Type: application/json
 
 {
-  "content": "This is a great post!",
-  "author": "user456",
-  "postId": "673496d0a8f4e5001234abcd"
+  "content": "Great post! Very informative.",
+  "author": "commenter1",
+  "postId": 1
 }
 
-### 2. Get all comments
+###
+
+### Create Another Comment on Same Post
+POST http://localhost:3000/comment
+Content-Type: application/json
+
+{
+  "content": "I totally agree with this!",
+  "author": "commenter2",
+  "postId": 1
+}
+
+###
+
+### Create Comment on Different Post
+POST http://localhost:3000/comment
+Content-Type: application/json
+
+{
+  "content": "Interesting perspective.",
+  "author": "commenter1",
+  "postId": 3
+}
+
+###
+
+### Create Comment (non-existent post)
+POST http://localhost:3000/comment
+Content-Type: application/json
+
+{
+  "content": "This should fail",
+  "author": "commenter1",
+  "postId": 999
+}
+
+###
+
+### Get All Comments
 GET http://localhost:3000/comment
 
-### 3. Get a specific comment by ID (replace with actual ID)
-GET http://localhost:3000/comment/673497d0a8f4e5001234def0
+###
 
-### 4. Get comments by post ID
-GET http://localhost:3000/comment?postId=673496d0a8f4e5001234abcd
+### Get Comments by Post ID
+GET http://localhost:3000/comment?postId=1
 
-### 5. Update a comment (replace with actual ID)
-PUT http://localhost:3000/comment/673497d0a8f4e5001234def0
+###
+
+### Get a Comment by ID
+GET http://localhost:3000/comment/1
+
+###
+
+### Get Comment by ID (non-existent)
+GET http://localhost:3000/comment/999
+
+###
+
+### Update a Comment (PUT)
+PUT http://localhost:3000/comment/1
 Content-Type: application/json
 
 {
-  "content": "This is an updated comment!",
-  "author": "user456",
-  "postId": "673496d0a8f4e5001234abcd"
+  "content": "Updated comment: Even more insightful now!",
+  "author": "commenter1",
+  "postId": 1
 }
 
-### 6. Delete a comment (replace with actual ID)
-DELETE http://localhost:3000/comment/673497d0a8f4e5001234def0
+###
 
-########################################
-### EXAMPLE WORKFLOW
-########################################
-
-### Step 1: Create a post
-POST http://localhost:3000/post
+### Update Comment (non-existent)
+PUT http://localhost:3000/comment/999
 Content-Type: application/json
 
 {
-  "title": "Welcome to the API",
-  "content": "This API demonstrates SOLID principles with MongoDB",
-  "sender": "admin"
+  "content": "Test",
+  "author": "test",
+  "postId": 1
 }
 
-### Step 2: Create another post
-POST http://localhost:3000/post
-Content-Type: application/json
+###
 
-{
-  "title": "Second Post",
-  "content": "Another example post",
-  "sender": "admin"
-}
+### Delete a Comment
+DELETE http://localhost:3000/comment/2
 
-### Step 3: Get all posts
-GET http://localhost:3000/post
+###
 
-### Step 4: Get posts by sender
-GET http://localhost:3000/post?sender=admin
+### Delete Comment (non-existent)
+DELETE http://localhost:3000/comment/999
 
-### Step 5: Add a comment to the first post (use actual post ID)
-POST http://localhost:3000/comment
-Content-Type: application/json
-
-{
-  "content": "Great explanation of SOLID principles!",
-  "author": "developer1",
-  "postId": "YOUR_POST_ID_HERE"
-}
-
-### Step 6: Add another comment
-POST http://localhost:3000/comment
-Content-Type: application/json
-
-{
-  "content": "I learned a lot from this!",
-  "author": "developer2",
-  "postId": "YOUR_POST_ID_HERE"
-}
-
-### Step 7: Get all comments for a specific post
-GET http://localhost:3000/comment?postId=YOUR_POST_ID_HERE
-
-### Step 8: Update a comment
-PUT http://localhost:3000/comment/YOUR_COMMENT_ID_HERE
-Content-Type: application/json
-
-{
-  "content": "Updated: I learned so much from this!",
-  "author": "developer2",
-  "postId": "YOUR_POST_ID_HERE"
-}
-
-### Step 9: Delete a comment
-DELETE http://localhost:3000/comment/YOUR_COMMENT_ID_HERE
+###

@@ -1,28 +1,40 @@
-import dotenv from 'dotenv';
-import { createApp } from './src/app.js';
-import { MongoDatabase } from './src/database/MongoDatabase.js';
+import express from 'express';
+import MongoDatabase from './src/database/MongoDatabase.js';
+import PostController from './src/controllers/PostController.js';
+import CommentController from './src/controllers/CommentController.js';
 
-dotenv.config();
-
+const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/posts_comments_db';
 
-const dbName = MONGODB_URI.split('/').pop().split('?')[0];
-const database = new MongoDatabase(MONGODB_URI, dbName);
-const app = createApp(database);
+app.use(express.json());
 
-async function startServer() {
-  try {
-    await database.connect();
-    
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Health check: http://localhost:${PORT}/health`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-}
+await MongoDatabase.connect();
 
-startServer();
+app.get('/health', (req, res) => {
+  const healthStatus = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    database: MongoDatabase.isConnected() ? 'Connected' : 'Disconnected'
+  };
+  
+  const statusCode = MongoDatabase.isConnected() ? 200 : 503;
+  res.status(statusCode).json(healthStatus);
+});
+
+
+app.post('/post', PostController.createPost);
+app.get('/post', PostController.getPosts);
+app.get('/post/:id', PostController.getPostById);
+app.put('/post/:id', PostController.updatePost);
+app.delete('/post/:id', PostController.deletePost);
+
+app.post('/comment', CommentController.createComment);
+app.get('/comment', CommentController.getComments);
+app.get('/comment/:id', CommentController.getCommentById);
+app.put('/comment/:id', CommentController.updateComment);
+app.delete('/comment/:id', CommentController.deleteComment);
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});

@@ -1,64 +1,69 @@
-import { MongoClient, ObjectId } from 'mongodb';
-import { IDatabase } from './IDatabase.js';
+import mongoose from 'mongoose';
+import IDatabase from './IDatabase.js';
 
-export class MongoDatabase extends IDatabase {
-  constructor(uri, dbName) {
+class MongoDatabase extends IDatabase {
+  constructor() {
     super();
-    this.uri = uri;
-    this.dbName = dbName;
-    this.client = null;
-    this.db = null;
+    this.connection = null;
+    this.mongooseInstance = mongoose;
   }
 
+  /**
+   * Connect to MongoDB
+   * @returns {Promise<void>}
+   */
   async connect() {
     try {
-      this.client = new MongoClient(this.uri);
-      await this.client.connect();
-      this.db = this.client.db(this.dbName);
-      console.log('Connected to MongoDB successfully');
+      const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/postsdb';
+      
+      this.connection = await this.mongooseInstance.connect(MONGO_URI);
+
+      console.log('MongoDB connected successfully');
+      console.log(`Database: ${this.mongooseInstance.connection.name}`);
     } catch (error) {
       console.error('MongoDB connection error:', error);
       throw error;
     }
   }
 
+  /**
+   * Disconnect from MongoDB
+   * @returns {Promise<void>}
+   */
   async disconnect() {
-    if (this.client) {
-      await this.client.close();
-      console.log('Disconnected from MongoDB');
+    try {
+      await this.mongooseInstance.disconnect();
+      this.connection = null;
+      console.log('MongoDB disconnected successfully');
+    } catch (error) {
+      console.error('MongoDB disconnection error:', error);
+      throw error;
     }
   }
 
-  async insertOne(collection, document) {
-    const result = await this.db.collection(collection).insertOne(document);
-    return result;
+  /**
+   * Get the Mongoose connection instance
+   * @returns {mongoose.Connection}
+   */
+  getConnection() {
+    return this.connection;
   }
 
-  async find(collection, query = {}) {
-    const documents = await this.db.collection(collection).find(query).toArray();
-    return documents;
+  /**
+   * Check if MongoDB is connected
+   * @returns {boolean}
+   */
+  isConnected() {
+    return this.mongooseInstance.connection.readyState === 1;
   }
 
-  async findOne(collection, query) {
-    const document = await this.db.collection(collection).findOne(query);
-    return document;
-  }
-
-  async updateOne(collection, query, update) {
-    const result = await this.db.collection(collection).updateOne(query, { $set: update });
-    return result;
-  }
-
-  async deleteOne(collection, query) {
-    const result = await this.db.collection(collection).deleteOne(query);
-    return result;
-  }
-
-  createObjectId(id) {
-    return new ObjectId(id);
-  }
-
-  isValidObjectId(id) {
-    return ObjectId.isValid(id);
+  /**
+   * Get Mongoose instance (for model creation)
+   * @returns {mongoose}
+   */
+  getMongoose() {
+    return this.mongooseInstance;
   }
 }
+
+export default new MongoDatabase();
