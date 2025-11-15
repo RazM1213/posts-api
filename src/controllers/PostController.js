@@ -1,57 +1,93 @@
-export class PostController {
-  constructor(postService) {
-    this.postService = postService;
-  }
+import PostService from "../services/PostService.js";
 
-  createPost = async (req, res) => {
+class PostController {
+  async createPost(req, res) {
     try {
-      const post = await this.postService.createPost(req.body);
-      res.status(201).json(post);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  };
+      const { title, content, sender } = req.body;
 
-  getAllPosts = async (req, res) => {
-    try {
-      const { sender } = req.query;
-      
-      if (sender) {
-        const posts = await this.postService.getPostsBySender(sender);
-        res.status(200).json(posts);
-      } else {
-        const posts = await this.postService.getAllPosts();
-        res.status(200).json(posts);
+      if (!title || !content || !sender) {
+        return res.status(400).json({
+          error: 'Missing required fields: title, content, sender'
+        });
       }
+
+      const post = await PostService.create({ title, content, sender });
+      res.status(201).json(post);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  };
+  }
 
-  getPostById = async (req, res) => {
+  async getPosts(req, res) {
     try {
-      const post = await this.postService.getPostById(req.params.id);
-      res.status(200).json(post);
-    } catch (error) {
-      res.status(404).json({ error: error.message });
-    }
-  };
+      const { sender } = req.query;
 
-  updatePost = async (req, res) => {
-    try {
-      const post = await this.postService.updatePost(req.params.id, req.body);
-      res.status(200).json(post);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  };
+      let posts;
+      if (sender) {
+        posts = await PostService.findBySender(sender);
+      } else {
+        posts = await PostService.findAll();
+      }
 
-  deletePost = async (req, res) => {
-    try {
-      const result = await this.postService.deletePost(req.params.id);
-      res.status(200).json(result);
+      res.json(posts);
     } catch (error) {
-      res.status(404).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
-  };
+  }
+
+  async getPostById(req, res) {
+    try {
+      const post = await PostService.findById(req.params.id);
+
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async updatePost(req, res) {
+    try {
+      const { title, content, sender } = req.body;
+
+      if (!title || !content || !sender) {
+        return res.status(400).json({
+          error: 'Missing required fields: title, content, sender'
+        });
+      }
+
+      const post = await PostService.update(req.params.id, {
+        title,
+        content,
+        sender
+      });
+
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      res.json(post);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async deletePost(req, res) {
+    try {
+      const post = await PostService.delete(req.params.id);
+
+      if (!post) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
+
+export default new PostController();

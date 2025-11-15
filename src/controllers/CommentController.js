@@ -1,57 +1,99 @@
-export class CommentController {
-  constructor(commentService) {
-    this.commentService = commentService;
-  }
+import CommentService from '../services/CommentService.js';
 
-  createComment = async (req, res) => {
+class CommentController {
+  async createComment(req, res) {
     try {
-      const comment = await this.commentService.createComment(req.body);
+      const { content, author, postId } = req.body;
+
+      if (!content || !author || !postId) {
+        return res.status(400).json({
+          error: 'Missing required fields: content, author, postId'
+        });
+      }
+
+      const comment = await CommentService.create({ content, author, postId });
       res.status(201).json(comment);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      if (error.message === 'Post not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: error.message });
     }
-  };
+  }
 
-  getAllComments = async (req, res) => {
+  async getComments(req, res) {
     try {
       const { postId } = req.query;
-      
+
+      let comments;
       if (postId) {
-        const comments = await this.commentService.getCommentsByPostId(postId);
-        res.status(200).json(comments);
+        comments = await CommentService.findByPostId(postId);
       } else {
-        const comments = await this.commentService.getAllComments();
-        res.status(200).json(comments);
+        comments = await CommentService.findAll();
       }
+
+      res.json(comments);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  };
+  }
 
-  getCommentById = async (req, res) => {
+  async getCommentById(req, res) {
     try {
-      const comment = await this.commentService.getCommentById(req.params.id);
-      res.status(200).json(comment);
-    } catch (error) {
-      res.status(404).json({ error: error.message });
-    }
-  };
+      const comment = await CommentService.findById(req.params.id);
 
-  updateComment = async (req, res) => {
-    try {
-      const comment = await this.commentService.updateComment(req.params.id, req.body);
-      res.status(200).json(comment);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  };
+      if (!comment) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
 
-  deleteComment = async (req, res) => {
-    try {
-      const result = await this.commentService.deleteComment(req.params.id);
-      res.status(200).json(result);
+      res.json(comment);
     } catch (error) {
-      res.status(404).json({ error: error.message });
+      res.status(500).json({ error: error.message });
     }
-  };
+  }
+
+  async updateComment(req, res) {
+    try {
+      const { content, author, postId } = req.body;
+
+      if (!content || !author || !postId) {
+        return res.status(400).json({
+          error: 'Missing required fields: content, author, postId'
+        });
+      }
+
+      const comment = await CommentService.update(req.params.id, {
+        content,
+        author,
+        postId
+      });
+
+      if (!comment) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
+
+      res.json(comment);
+    } catch (error) {
+      if (error.message === 'Post not found') {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  async deleteComment(req, res) {
+    try {
+      const comment = await CommentService.delete(req.params.id);
+
+      if (!comment) {
+        return res.status(404).json({ error: 'Comment not found' });
+      }
+
+      res.status(204).send();
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
+
+export default new CommentController();
